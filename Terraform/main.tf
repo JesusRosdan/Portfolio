@@ -75,8 +75,8 @@ resource "proxmox_vm_qemu" "VMsandbox" {
     #ipconfig1  = "ip=${var.secondary_master_ips[count.index]}/${var.networkrange}"
 
     sshkeys    = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDdPvEBDoF1ns1dhvIqGUefw9Aqukp8Sdu+DVtkYdpqm jesusrosdan@hotmail.com"   
-    ciuser     = "tocino"
-    cipassword = "tocino"
+    ciuser     = var.linuxuser
+    cipassword = var.linuxpassword
     nameserver = "1.1.1.1"
     boot       = "order=scsi0;ide2"
 }
