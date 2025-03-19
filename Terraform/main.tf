@@ -61,6 +61,7 @@ resource "proxmox_vm_qemu" "VMs" {
 
     memory = local.vms[count.index].memory
 
+    cicustom   = "vendor=local:snippets/docker.yml" 
     scsihw = "virtio-scsi-single"
 
     # Setup the disk
