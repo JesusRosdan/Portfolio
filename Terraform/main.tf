@@ -15,10 +15,35 @@ provider "proxmox" {
     pm_otp = ""
 }
 
-resource "proxmox_vm_qemu" "VMsandbox" {
-    name        = "VMsandbox"
-    desc = "Machine of experiments"
+locals {
+  vms = [
+    {
+      name   = "DEVCI"
+      memory = 4096
+      cores  = 4
+      ip = "192.168.1.90"
+    },
+    {
+      name   = "Monitoring"
+      memory = 8192
+      cores  = 8
+      ip = "192.168.1.91"
+    },
+    {
+      name   = "Logging"
+      memory = 8192
+      cores  = 8
+      ip = "192.168.1.92"
+    }
+  ]
+}
 
+resource "proxmox_vm_qemu" "VMs" {
+    count = length(local.vms)
+    
+    name   = local.vms[count.index].name
+    desc = "Machine ${count.index} of experiments"
+    
     # Node name has to be the same name as within the cluster
     # this might not include the FQDN
     target_node = "pve" 
@@ -27,12 +52,16 @@ resource "proxmox_vm_qemu" "VMsandbox" {
     agent = 1
 
     os_type = "Linux 6.x - 2.6 Kernel"
-    cores = 4
+
+    cores  = local.vms[count.index].cores
+
     sockets = 1
     vcpus = 0
     cpu_type = "host"
-    memory      = 2048
-    scsihw = "virtio-scsi-pci"
+
+    memory = local.vms[count.index].memory
+
+    scsihw = "virtio-scsi-single"
 
     # Setup the disk
     disks {
@@ -60,7 +89,7 @@ resource "proxmox_vm_qemu" "VMsandbox" {
     network {
         id = 0
         model = "virtio"
-        bridge = "vmbr2"
+        bridge = "vmbr0"
         firewall  = false
         link_down = false
     }
@@ -69,7 +98,7 @@ resource "proxmox_vm_qemu" "VMsandbox" {
     # Setup the ip address using cloud-init.
     #boot = "order=scsi0"
     # Keep in mind to use the CIDR notation for the ip.
-    ipconfig0 = "ip=192.168.1.90/24,gw=192.168.1.1"
+    ipconfig0 = "ip=${local.vms[count.index].ip}/24,gw=192.168.1.1"
 
     #ipconfig0  = "ip=${var.master_ips[count.index]}/${var.networkrange},gw=${var.gateway}"
     #ipconfig1  = "ip=${var.secondary_master_ips[count.index]}/${var.networkrange}"
